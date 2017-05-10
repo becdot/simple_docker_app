@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -x
+
+pid=0
+
+declare -A signals=( ["SIGHUP"]=1 ["SIGINT"]=2 ["SIGTERM"]=15)
+
+# Trap the signal and send it as an argument to the handler
+trap_wrapper() {
+  local f="$1"
+
+  shift
+  for s; do
+    trap "$f $s" "$s"
+  done
+}
+
+# Send the signal to the process and wait for it to finish before exiting
+signal_handler() {
+  if [ $pid -ne 0 ]; then
+    kill -"$1" "$pid"
+    wait "$pid"
+  fi
+  # Reset to a default signal handler.
+  trap - $1
+  exit $[128 + ${signals[$1]}]
+}
+
+trap_wrapper signal_handler ${!signals[@]}
+
+# run application
+npm start &
+pid="$!"
+
+wait ${!}

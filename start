@@ -30,7 +30,7 @@ signal_handler() {
 trap_wrapper signal_handler ${!signals[@]}
 
 # Run application
-npm start &
+node server.js &
 pid=$!
 
 wait
